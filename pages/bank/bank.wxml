@@ -1,0 +1,68 @@
+<navigation-bar title="链上面试官" back="{{false}}" background="#f6f8fa" color="black"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y type="list" scroll-top="{{scrollTop}}" bounces="{{false}}">
+  <view class="wrap">
+
+    <!-- 顶部：口号 + 总进度 + 当前题号 -->
+    <view class="card hero">
+      <view class="hero-top">
+        <view class="hero-title">链上面试官，链下拿 offer</view>
+        <view wx:if="{{cur}}" class="qno">{{cur.no}}</view>
+      </view>
+      <view class="hero-sub">先自己答，再对照解析，稳稳上岸。</view>
+      <view class="hero-stats">
+        <text class="hs-main">已掌握 {{stats.known}} / {{stats.total}}</text>
+        <text class="hs-dim">待复习 {{stats.review}} · 未掌握 {{stats.todo}}</text>
+      </view>
+      <view class="bar"><view class="fill" style="width: {{stats.pct}}%"></view></view>
+    </view>
+
+    <!-- 极简筛选：只留分类，一行横滑 -->
+    <scroll-view class="catscroll" scroll-x show-scrollbar="{{false}}" bounces="{{false}}">
+      <view class="chips nowrap">
+        <view
+          wx:for="{{cats}}"
+          wx:key="id"
+          class="chip {{activeCat === item.id ? 'active' : ''}}"
+          data-id="{{item.id}}"
+          bindtap="onCat"
+        ><text>{{item.name}}</text><text class="n">{{item.count}}</text></view>
+      </view>
+    </scroll-view>
+
+    <!-- 单题卡片（支持左右滑动切题：右划上一个，左划下一步） -->
+    <block wx:if="{{cur}}">
+      <view class="qcard card {{anim === 'next' ? 'slide-next' : anim === 'prev' ? 'slide-prev' : ''}}"
+        bindtouchstart="onTouchStart"
+        bindtouchend="onTouchEnd"
+      >
+        <view class="qmeta">
+          <text class="qnum" style="color: {{cur.color}}">No.{{cur.no}}</text>
+          <text class="badge">{{cur.levelName}}</text>
+          <text class="catname">{{cur.catName}}</text>
+          <text wx:if="{{cur.state === 'known'}}" class="badge known">已掌握</text>
+          <text wx:if="{{cur.state === 'review'}}" class="badge review">待复习</text>
+        </view>
+        <view class="qtext">{{cur.q}}</view>
+
+        <view class="qbody">
+          <text class="atext">{{cur.a}}</text>
+        </view>
+
+        <view class="acts">
+          <view class="act {{cur.state === 'known' ? 'primary' : ''}}" data-id="{{cur.id}}" data-st="known" bindtap="onMark">🧠 已掌握</view>
+          <view class="act ghost" data-id="{{cur.id}}" data-st="none" bindtap="onMark">清除</view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:else class="empty">这个分类下没有题目</view>
+
+  </view>
+</scroll-view>
+
+<!-- 底部操作栏：上一步 / 模拟面试 / 下一步 -->
+<view class="bottombar">
+  <view class="bbtn {{curIdx === 0 ? 'off' : ''}}" bindtap="onPrev">‹ 上一步</view>
+  <view class="bbtn quiz" bindtap="onQuiz">🎤 模拟面试</view>
+  <view class="bbtn next" bindtap="onNext">{{curIdx === list.length - 1 ? '下一步·我的 ›' : '下一步 ›'}}</view>
+</view>

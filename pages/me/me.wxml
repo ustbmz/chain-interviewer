@@ -1,0 +1,49 @@
+<navigation-bar title="我的进度" back="{{true}}" background="#f6f8fa" color="black"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y type="list" bounces="{{false}}">
+  <view class="wrap">
+
+    <!-- 上一步：回题库 -->
+    <view class="backrow" bindtap="onBack">‹ 上一步 · 回题库</view>
+
+    <!-- 总进度 -->
+    <view class="card total">
+      <view class="total-top">
+        <view>
+          <view class="total-pct">{{stats.pct}}%</view>
+          <view class="total-label">已掌握</view>
+        </view>
+        <view class="total-nums">
+          <text class="tn">题库 {{stats.total}} 题</text>
+          <text class="tn green">已掌握 {{stats.known}}</text>
+          <text class="tn amber">待复习 {{stats.review}}</text>
+          <text class="tn dim">未掌握 {{stats.todo}}</text>
+        </view>
+      </view>
+      <view class="bar"><view class="fill" style="width: {{stats.pct}}%"></view></view>
+    </view>
+
+    <!-- 分类进度 -->
+    <view class="card catcard">
+      <view class="sec-title">分类进度</view>
+      <view wx:for="{{cats}}" wx:key="id" class="cat-row">
+        <view class="cat-head">
+          <view class="cat-name">
+            <view class="dot" style="background: {{item.color}}"></view>
+            <text>{{item.name}}</text>
+          </view>
+          <text class="cat-n">{{item.known}} / {{item.total}}</text>
+        </view>
+        <view class="bar thin"><view class="fill" style="width: {{item.width}}"></view></view>
+      </view>
+    </view>
+
+    <!-- 关于 -->
+    <view class="card about">
+      <view class="about-title">链上面试官</view>
+      <view class="about-line">链上面试官，链下拿 offer。</view>
+      <view class="about-line dim">题库与复习站（共识笔记）同源，先自己答、再对照解析。进度保存在本机。</view>
+      <view class="clear" bindtap="onClear">清空掌握进度</view>
+    </view>
+
+  </view>
+</scroll-view>

@@ -1,0 +1,60 @@
+<navigation-bar title="模拟面试" back="{{true}}" background="#f6f8fa" color="black"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y type="list" bounces="{{false}}">
+  <view class="wrap">
+
+    <!-- 准备 -->
+    <view wx:if="{{phase === 'idle'}}" class="card idle">
+      <view class="idle-title">来一场模拟面试？</view>
+      <view class="idle-sub">面试官从题库里随机抽题：优先你还没刷过的，其次待复习。先自己想答案，再对照解析，最后自己判断记没记住。</view>
+      <view class="chips">
+        <view
+          wx:for="{{sizes}}"
+          wx:key="*this"
+          class="chip {{size === item ? 'active' : ''}}"
+          data-n="{{item}}"
+          bindtap="onSize"
+        >{{item}} 题</view>
+      </view>
+      <view class="bigbtn" bindtap="onStart">开始面试</view>
+    </view>
+
+    <!-- 面试中 -->
+    <view wx:if="{{phase === 'playing'}}">
+      <view class="prog">
+        <text class="prog-n">第 {{idx + 1}} / {{queue.length}} 题</text>
+        <text class="prog-dim">记住了 {{counts.known}} · 没记住 {{counts.review}}</text>
+      </view>
+      <view class="bar"><view class="fill" style="width: {{(idx / queue.length) * 100}}%"></view></view>
+
+      <view class="card qcard">
+        <view class="meta">
+          <text class="badge">{{queue[idx].levelName}}</text>
+          <text class="badge">{{queue[idx].catName}}</text>
+        </view>
+        <text class="qq">{{queue[idx].q}}</text>
+
+        <view wx:if="{{!queue[idx].showA}}" class="bigbtn" bindtap="onReveal">想好了，看参考答案</view>
+
+        <view wx:if="{{queue[idx].showA}}" class="ans">
+          <view class="ans-head">参考答案</view>
+          <text class="atext">{{queue[idx].a}}</text>
+          <view class="acts">
+            <view class="act primary" data-st="known" bindtap="onMark">😄 记住了</view>
+            <view class="act warn" data-st="review" bindtap="onMark">😅 没记住</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 收尾 -->
+    <view wx:if="{{phase === 'done'}}" class="card done">
+      <view class="done-emoji">🎯</view>
+      <view class="done-title">这一轮结束</view>
+      <view class="done-num">记住了 {{counts.known}} / {{queue.length}}</view>
+      <view class="done-sub">标「没记住」的 {{counts.review}} 题已放进待复习，下一轮会优先出现。</view>
+      <view class="bigbtn" bindtap="onRestart">再来一轮</view>
+      <view class="bigbtn ghost" bindtap="onBackHome">回题库</view>
+    </view>
+
+  </view>
+</scroll-view>
