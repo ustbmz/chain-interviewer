@@ -19,12 +19,6 @@
 - **我的进度**：总掌握率 + 分类进度条
 - **细节**：全局面震动反馈、禁用 iOS 回弹、自定义藏青主题导航栏
 
-## 数据来源
-
-题库与 [共识笔记 · BlockchainStudy](https://github.com/ustbmz/BlockchainStudy) 复习站同源：`/Users/cnmz/Study/ProjectBreakdown/区块链面试题.md`（90 题 / 15 分类）。
-
-更新题库：改 md → 复习站跑 `node build.js` → 将 `js/interview.js` 的内容同步到本仓库 `data/questions.js`。
-
 ## 目录结构
 
 ```
