@@ -1,20 +1,113 @@
 /**bank.wxss**/
 
-/* ===== 极简筛选：分类一行横滑，无边框无卡片 ===== */
-.catscroll {
+/* ===== 题型多选下拉入口 ===== */
+.catselect {
   margin-top: 20rpx;
-  width: 100%;
-}
-.chips.nowrap {
-  /* scroll-view 内不换行：内容撑开宽度，横向滑 */
-  display: inline-flex;
-  flex-wrap: nowrap;
-  padding: 4rpx 8rpx 4rpx 0;
+  display: flex;
+  align-items: center;
   gap: 12rpx;
+  padding: 18rpx 24rpx;
+  background: #ffffff;
+  border: 1rpx solid #e4e9ef;
+  border-radius: 16rpx;
 }
-.catscroll .chip {
-  padding: 10rpx 26rpx;
+.cs-label {
+  flex: none;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2c4d79;
 }
+.cs-value {
+  flex: 1;
+  font-size: 26rpx;
+  color: #9aa4b2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cs-value.picked { color: #1f2328; font-weight: 500; }
+.cs-arrow {
+  flex: none;
+  font-size: 24rpx;
+  color: #9aa4b2;
+}
+
+/* ===== 题型选择弹层 ===== */
+.catmask {
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(31, 35, 40, .45);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.catsheet {
+  background: #ffffff;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 28rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
+  animation: sheet-up .22s ease-out;
+}
+@keyframes sheet-up {
+  from { transform: translateY(40%); opacity: .6; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.sheet-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2328;
+}
+/* 题型选择列表：行式对勾风（类似微信设置列表） */
+.sheet-list {
+  /* Skyline 下 scroll-view 必须显式高度，max-height 不生效会塌陷 */
+  height: 600rpx;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx 8rpx;
+  border-bottom: 1rpx solid #eaeef2;
+}
+.opt:last-child { border-bottom: none; }
+/* 分类色圆点：与题卡标签/网站配色同源，用于区分题型 */
+.opt-dot {
+  flex: none;
+  width: 22rpx;
+  height: 22rpx;
+  border-radius: 50%;
+}
+.opt-name {
+  flex: 1;
+  font-size: 28rpx;
+  color: #1f2328;
+}
+.opt-n {
+  flex: none;
+  font-size: 24rpx;
+  color: #9aa4b2;
+}
+/* 选中行：无底色，名称藏青加粗 + 行尾对勾 */
+.opt.on .opt-name {
+  color: #2c4d79;
+  font-weight: 600;
+}
+.opt.on .opt-n {
+  color: #2c4d79;
+}
+.opt-check {
+  flex: none;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #2c4d79;
+}
+
 
 /* ===== 单题模式 ===== */
 .qcard {
@@ -76,15 +169,15 @@
   gap: 14rpx;
   padding: 16rpx 24rpx;
   padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
-  background: #ffffff;
-  border-top: 1rpx solid #eaeef2;
+  background: rgba(44, 77, 121, .13);
+  border-top: 1rpx solid rgba(44, 77, 121, .22);
 }
 .bbtn {
   flex: 1;
   text-align: center;
   padding: 20rpx 0;
   border-radius: 999rpx;
-  border: 1rpx solid #d0d7de;
+  border: 1rpx solid rgba(44, 77, 121, .28);
   background: #ffffff;
   color: #2c4d79;
   font-size: 27rpx;
@@ -98,23 +191,21 @@
 }
 .bbtn.off {
   color: #c3ccd6;
-  border-color: #eaeef2;
+  border-color: rgba(44, 77, 121, .12);
   font-weight: 400;
 }
 
-.hero-top {
+.hero-brand {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  gap: 14rpx;
+  min-width: 0;
 }
-.qno {
+.hero-logo {
+  width: 56rpx;
+  height: 56rpx;
   flex: none;
-  min-width: 64rpx;
-  text-align: center;
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #2c4d79;
-  font-variant-numeric: tabular-nums;
+  border-radius: 12rpx;
 }
 .hero-title {
   font-size: 34rpx;

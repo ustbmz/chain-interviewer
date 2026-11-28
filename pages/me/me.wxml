@@ -1,6 +1,13 @@
-<navigation-bar title="我的进度" back="{{true}}" background="#f6f8fa" color="black"></navigation-bar>
+<navigation-bar title="我的进度" back="{{true}}" background="#2c4d79" color="white"></navigation-bar>
 <scroll-view class="scrollarea" scroll-y type="list" bounces="{{false}}">
   <view class="wrap">
+
+    <!-- 品牌标识 -->
+    <view class="brand">
+      <image class="brand-logo" src="/assets/images/logo.png" mode="aspectFit" />
+      <view class="brand-name">链上面试官</view>
+      <view class="brand-sub">链下拿 offer</view>
+    </view>
 
     <!-- 上一步：回题库 -->
     <view class="backrow" bindtap="onBack">‹ 上一步 · 回题库</view>

@@ -1,4 +1,29 @@
 /**me.wxss**/
+/* 品牌标识 */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 0 8rpx;
+}
+.brand-logo {
+  width: 112rpx;
+  height: 112rpx;
+  border-radius: 24rpx;
+}
+.brand-name {
+  margin-top: 16rpx;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2c4d79;
+}
+.brand-sub {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #9aa4b2;
+  letter-spacing: 2rpx;
+}
+
 .backrow {
   margin: 4rpx 0 16rpx;
   padding: 14rpx 0;

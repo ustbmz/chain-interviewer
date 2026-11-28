@@ -5,7 +5,7 @@
     "pages/me/me"
   ],
   "window": {
-    "navigationBarTextStyle": "black",
+    "navigationBarTextStyle": "white",
     "navigationStyle": "custom"
   },
   "style": "v2",

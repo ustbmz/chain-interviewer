@@ -76,6 +76,8 @@ Page({
     const st = e.currentTarget.dataset.st; // known | review
     const cur = this.data.queue[this.data.idx];
     if (!cur) return;
+    // 记住了给个喜庆音效（震动保留）；本来就是已掌握再点则不重播
+    if (st === 'known' && cur.state !== 'known') feedback.cheer();
     feedback.tap();
     store.setState(cur.id, st);
     const counts = this.data.counts;

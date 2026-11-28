@@ -1,4 +1,4 @@
-// 题库数据：来源 ProjectBreakdown/区块链拆解项目面试题.md（与复习站同源）
+// 题库数据：来源 ProjectBreakdown/区块链面试题.md（与复习站同源）
 // 更新方式：改 md 后跑站点 node build.js，再把 js/interview.js 内容同步到这里
 module.exports = {
  "categories": [
@@ -56,6 +56,55 @@ module.exports = {
    "name": "Go",
    "desc": "撮合引擎是 Go 写的。岗位如果问到语言，用这一组回答，并带到 `market-match` 里的用法。",
    "count": 10,
+   "level": 2
+  },
+  {
+   "id": "stake",
+   "name": "MetaNodeStake（质押挖矿）",
+   "desc": "作业是多池质押，记账接近 MasterChef。奖励代币一次性铸给部署者，合约不会再 mint。",
+   "count": 6,
+   "level": 3
+  },
+  {
+   "id": "univ2",
+   "name": "Uniswap V2",
+   "desc": "恒定乘积 AMM：滑点、LP、闪电换币、TWAP 预言机",
+   "count": 9,
+   "level": 3
+  },
+  {
+   "id": "univ3",
+   "name": "Uniswap V3",
+   "desc": "集中流动性：tick、区间订单、mint/burn/collect",
+   "count": 4,
+   "level": 3
+  },
+  {
+   "id": "auction",
+   "name": "NFT 拍卖作业",
+   "desc": "多币种出价折算美元、预言机快照、UUPS 升级",
+   "count": 3,
+   "level": 3
+  },
+  {
+   "id": "pattern",
+   "name": "捐赠合约、提款方式与工具链",
+   "desc": "transfer/send/call、pull 模式、constant/immutable",
+   "count": 4,
+   "level": 2
+  },
+  {
+   "id": "eip",
+   "name": "常用 ERC / EIP",
+   "desc": "作业要求按场景记：DEX、借贷、NFT、钱包。25–29 题已经覆盖 ERC20 / 721，这里补其余。",
+   "count": 7,
+   "level": 2
+  },
+  {
+   "id": "geth",
+   "name": "Go-Ethereum",
+   "desc": "作业对照 geth v1.17.10：查区块、发交易、`abigen` 调 Counter。",
+   "count": 6,
    "level": 2
   }
  ],
@@ -569,6 +618,396 @@ module.exports = {
    "cat": "go",
    "catName": "Go",
    "id": "p51"
+  },
+  {
+   "no": 52,
+   "q": "用户存进去的时候，奖励立刻转到钱包吗？本金怎么取？",
+   "a": "不会立刻转。`deposit` 只把这段时间新产生的奖励记进 `pendingMetaNode`。要币，自己调 `claim`。本金先 `unstake` 进锁定队列，等到 `unlockBlocks` 再 `withdraw`。`unstake` 当时 `stAmount` 已经减掉，不再计奖。",
+   "level": 3,
+   "tags": [],
+   "cat": "stake",
+   "catName": "MetaNodeStake（质押挖矿）",
+   "id": "p52"
+  },
+  {
+   "no": 53,
+   "q": "`accMetaNodePerST` 是什么？为什么乘 1e18？",
+   "a": "每 1 wei 质押累计对应多少 MetaNode。池子结算时：`acc += 本池奖励 × 1e18 / stTokenAmount`。乘 1e18 是把整数除法的小数保住。用户待领是 `stAmount × acc / 1e18 − finishedMetaNode + pendingMetaNode`。`finishedMetaNode` 是水位，存、解押、领完都会按当前仓位重写，避免同一段奖励算两次。",
+   "level": 3,
+   "tags": [],
+   "cat": "stake",
+   "catName": "MetaNodeStake（质押挖矿）",
+   "id": "p53"
+  },
+  {
+   "no": 54,
+   "q": "池子里没人质押的那几块奖励去哪了？",
+   "a": "不会累到 `accMetaNodePerST` 上。之后才存进来的人补领不到这段。全网产量按 `poolWeight / totalPoolWeight` 切开，池内再按 `stAmount` 占比分。改权重前要先 `updatePool`，否则旧区间会按新权重算。",
+   "level": 3,
+   "tags": [],
+   "cat": "stake",
+   "catName": "MetaNodeStake（质押挖矿）",
+   "id": "p54"
+  },
+  {
+   "no": 55,
+   "q": "`withdrawPaused` 为真时，还能质押吗？",
+   "a": "能。暂停只挡 `unstake` / `withdraw` 和 `claim`。`depositETH` / `deposit` 不受这两个开关影响。这是产品选择：紧急时先拦住出金和领奖，仍允许人把币锁进来。",
+   "level": 3,
+   "tags": [],
+   "cat": "stake",
+   "catName": "MetaNodeStake（质押挖矿）",
+   "id": "p55"
+  },
+  {
+   "no": 56,
+   "q": "UUPS 和透明代理差在哪？升级时存储能在中间插字段吗？",
+   "a": "都是代理里 `delegatecall` 逻辑合约。UUPS 的升级函数写在逻辑合约里，由 `UPGRADE_ROLE` 调 `upgradeToAndCall`；透明代理把升级入口放在代理自己。实现合约构造函数里要 `_disableInitializers`，防止有人直接初始化实现合约。新变量只能加在存储末尾。拍卖作业的 V2 只在末尾加 `minIncrementBps`，不能给已有 `Auction` 结构体中途加字段。",
+   "level": 3,
+   "tags": [],
+   "cat": "stake",
+   "catName": "MetaNodeStake（质押挖矿）",
+   "id": "p56"
+  },
+  {
+   "no": 57,
+   "q": "奖励代币余额不够时，`claim` 会整笔回滚吗？",
+   "a": "不会。`_safeMetaNodeTransfer` 只转出合约里还剩的 MetaNode。所以部署后必须把奖励打进质押合约，用户才能领满。这和「余额不足就 revert」不是同一条路。",
+   "level": 3,
+   "tags": [],
+   "cat": "stake",
+   "catName": "MetaNodeStake（质押挖矿）",
+   "id": "p57"
+  },
+  {
+   "no": 58,
+   "q": "AMM 和订单簿差在哪？你拆过的四套里，哪套是 AMM，哪套是订单簿？",
+   "a": "AMM 跟池子成交，价格由储备公式算出来，不必等人挂反向单。订单簿是买卖排队、撮合成交。Uniswap V2 是 AMM。NFTMarket 是链上订单簿，market-match 是链下订单簿，永续是链下簿、链上结算。Pledge 没有盘口，到点按预言机一次性配对。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p58"
+  },
+  {
+   "no": 59,
+   "q": "`x · y = k` 怎么换？手续费打在哪一侧？",
+   "a": "打进 `dx`，拿走 `dy`，换完乘积（扣完手续费后）不能小于原来的 `k`。不计费：`dy = dx · y / (x + dx)`。V2 收 0.30%，只有 `0.997 dx` 参与计价：`dy = 997·dx·y / (1000·x + 997·dx)`。价格是储备比 `y/x`。这一笔会把储备推走，所以成交均价一定差于报价时的现货价。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p59"
+  },
+  {
+   "no": 60,
+   "q": "滑点是什么？`amountOutMin` 防的是哪一种差？",
+   "a": "滑点是成交均价相对报价时现货价差了多少。池子越浅、换得越多，公式本身的滑点越大。Router 的 `amountOutMin`（或 `amountInMax`）防的是**打包时价格已经变了**：实际输出低于你填的下限，整笔回滚。它消不掉恒定乘积自己带来的那截价差。大单拆小、换更深的池、设紧 deadline，是另一层。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p60"
+  },
+  {
+   "no": 61,
+   "q": "三明治攻击怎么赚？`deadline` 挡得住吗？",
+   "a": "搜索者在 mempool 里看见你的换，先顺着你的方向推价，让你以更差的价格成交，再反向把价打回来。赚的是你滑点里那一截。这不是合约漏洞。收紧 `amountOutMin`，夹完之后你的下限过不了，夹的人赚不到。`deadline` 防的是拖很久才打包，防不了同一区块里的夹击。私有提交、走深池、拆单，能缩小被夹的空间。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p61"
+  },
+  {
+   "no": 62,
+   "q": "无常损失跟谁比？价格翻倍大约亏多少？",
+   "a": "跟「入场那两笔币一直拿在手里」比，不是跟本金比。价格离开入场价，池子为了维持 `k` 会卖掉变贵的一边。`d = P1/P0` 时，`IL = 2√d/(1+d) − 1`。`d=2` 约 −5.7%，`d=4` 是 −20%。价格走回原价，这笔差距消失，所以叫无常。手续费是另一项收入，可能盖过也可能盖不过。合约里没有算 IL 的函数。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p62"
+  },
+  {
+   "no": 63,
+   "q": "添加流动性时 LP token 怎么算？手续费怎么进 LP 口袋？",
+   "a": "池子已有储备时，`S = min(dx/x, dy/y) · T`。移除按同一比例拿回两种币。交易手续费留在池子里，`k` 变大，每份 LP 对应的池子变厚。协议若开了 `feeTo`，再从 √k 的增长里铸 1/6 给协议。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p63"
+  },
+  {
+   "no": 64,
+   "q": "Flash swap 和普通 swap 的差别在哪一步？借同一种币要多还多少？",
+   "a": "都调 `Pair.swap`。`data` 为空是普通兑换，调用前输入代币已经在池子里。`data` 非空时，Pair **先把币转走**，再回调 `uniswapV2Call`，回来才量余额、检查 `k`。还不上整笔回滚，所以不需要抵押。借同一种币，还回量至少是 `借出 × 1000/997`，多出来的约 0.301% 是手续费。回调里必须确认 `msg.sender` 是那个 Pair。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p64"
+  },
+  {
+   "no": 65,
+   "q": "TWAP 为什么能当预言机？一笔闪电贷改得了 TWAP 吗？",
+   "a": "现货价只在成交时变，两次同步之间价格钉死。TWAP 是这段时间价格按停留时长加权。V2 把 `price0Cumulative` 累加在 Pair 上，任意两点的差除以时间就是区间均价。一笔交易里把储备打偏再打回去，占用的时间接近 0，进不了这段平均。清算若读即时 `y/x` 会被同一笔操纵；读一段时间的 TWAP 或 Chainlink，才和 Pledge / 拍卖作业里的选择一致。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p65"
+  },
+  {
+   "no": 66,
+   "q": "Uniswap V2 的 Core 和 Periphery 各干什么？",
+   "a": "Core 是 Factory 和 Pair：管池子、储备、`mint`/`burn`/`swap`、`k` 检查。Periphery 是 Router 和 Library：帮用户算路径、塞 `amountOutMin`、处理 ETH/WETH、在一笔交易里完成授权后的多跳。安全边界在 Core；Router 被绕过也不该让 Pair 的 `k` 被破坏。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ2",
+   "catName": "Uniswap V2",
+   "id": "p66"
+  },
+  {
+   "no": 67,
+   "q": "集中流动性比 V2 多了什么？价格走出区间呢？",
+   "a": "LP 自选 `[tickLower, tickUpper]`，资金只覆盖这一段。价格在区间内时，同样本金能提供更高的有效流动性，也只在这段收手续费。走出区间，仓位不再活跃，也不再赚手续费，变成单边持仓。这是资金效率，也是范围之外的无常损失会更陡。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ3",
+   "catName": "Uniswap V3",
+   "id": "p67"
+  },
+  {
+   "no": 68,
+   "q": "tick 是什么？Pool 为什么不存浮点价格？",
+   "a": "tick 是价格的离散下标：`P_raw = 1.0001^tick`。`tick=0` 对应价格比 1，每跳约 0.01%。Pool 存的是 `sqrtPriceX96 = √P × 2^96`。LP 用上下 tick 标边界；swap 查下一个已初始化 tick，在当前活跃流动性里走完这一段，跨界再加减流动性。这样不必每笔遍历所有仓位。转换走 `TickMath`，合法 tick 大约 −887272 到 887272。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ3",
+   "catName": "Uniswap V3",
+   "id": "p68"
+  },
+  {
+   "no": 69,
+   "q": "tick spacing 限制的是价格，还是仓位边界？费率和 spacing 为什么绑在一起？",
+   "a": "限制的是**仓位边界能落在哪些 tick**，不是 swap 价格只能按 spacing 跳。spacing=60 时边界选 …−120,−60,0,60…，价格仍在两个边界之间连续变。Factory 默认：0.05%→10，0.30%→60，1%→200。稳定币对波动小，细边界有用；波动大的池子用更宽 spacing，少一些跨 tick 的 gas。这是配置选择，不是费率公式推出来的。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ3",
+   "catName": "Uniswap V3",
+   "id": "p69"
+  },
+  {
+   "no": 70,
+   "q": "V3 的 `mint` / `burn` / `collect` 为什么拆开？",
+   "a": "`mint` 加流动性，通过 callback 收代币。`burn` 只记账：减少流动性、记下该退的币，**当时不转**。`collect` 才把记下的代币转走。手续费也是先累在仓位上，再 collect。拆开是为了在一笔交易里组合加、减、收，并且让付款检查发生在状态更新之后。",
+   "level": 3,
+   "tags": [],
+   "cat": "univ3",
+   "catName": "Uniswap V3",
+   "id": "p70"
+  },
+  {
+   "no": 71,
+   "q": "ETH 出价和 USDC 出价怎么比谁高？为什么不能直接比 `amount`？",
+   "a": "都换成 18 位小数的美元再比。`美元 = 数量 × 预言机价格 × 10^(18−价格小数位) / 10^(代币小数位)`。0.01 ETH 在 2000 美元/ETH 时是 20 美元；30 USDC 是 30 美元，USDC 赢。wei 数量和 USDC 最小单位不能直接比。价格 ≤0 或超过 `maxPriceAge`，新出价拒绝。",
+   "level": 3,
+   "tags": [],
+   "cat": "auction",
+   "catName": "NFT 拍卖作业",
+   "id": "p71"
+  },
+  {
+   "no": 72,
+   "q": "`endAuction` 会不会再读一次预言机，改赢家？",
+   "a": "不会。结算用的是出价当时记下的美元和原始数量。截止后谁都可以调。有赢家：NFT 给赢家，扣完手续费把出价代币给卖家；没人出价：NFT 还给卖家。先改拍卖记录，再转 NFT / 退款。退的是这场记下的数量，不是合约全部余额，两场拍卖的钱不会串。",
+   "level": 3,
+   "tags": [],
+   "cat": "auction",
+   "catName": "NFT 拍卖作业",
+   "id": "p72"
+  },
+  {
+   "no": 73,
+   "q": "用户应该 `approve` 给实现合约还是代理？",
+   "a": "代理。用户调的是代理地址，`delegatecall` 进逻辑合约，NFT 和 ERC20 的授权对象必须是代理。实现合约构造函数里 `_disableInitializers`，不能直接 `initialize` 实现合约。V2 只在存储末尾加最小加价比例。",
+   "level": 3,
+   "tags": [],
+   "cat": "auction",
+   "catName": "NFT 拍卖作业",
+   "id": "p73"
+  },
+  {
+   "no": 74,
+   "q": "`transfer`、`send`、`call` 转 ETH 怎么选？作业里的捐赠合约用的哪一种？",
+   "a": "`transfer` 给对方 2300 gas，失败自动 revert。`send` 同样 2300 gas，失败返回 false，必须检查。`call{value: …}(\"\")` 把剩余 gas 转发，灵活，也必须检查返回值，并配合 CEI / 重入锁。`BeggingContract.withdraw` 用的是 `transfer`。对方是会在 `receive` 里花很多 gas 的合约，2300 会失败，所有者可能提不走。生产提款更常见的是 `call` 加重入锁，先清零再转。",
+   "level": 2,
+   "tags": [],
+   "cat": "pattern",
+   "catName": "捐赠合约、提款方式与工具链",
+   "id": "p74"
+  },
+  {
+   "no": 75,
+   "q": "`constant` 和 `immutable`？`mapping` 为什么不能 `for` 遍历？",
+   "a": "`constant` 编译期就定；`immutable` 构造函数里定，之后都不能改，比普通状态变量省存储。`mapping` 只有 key→value，没有 key 列表和 length。要枚举，自己维护数组，并防止同一 key 加两次。捐赠作业若要做排行榜，必须另存地址数组，不能只靠 `donations` 这张表。",
+   "level": 2,
+   "tags": [],
+   "cat": "pattern",
+   "catName": "捐赠合约、提款方式与工具链",
+   "id": "p75"
+  },
+  {
+   "no": 76,
+   "q": "什么是 pull over push？和质押的 `claim` 有什么关系？",
+   "a": "push 是合约循环给所有人转账，一个人 revert 或数组太大，整笔失败。pull 是每人自己来取。Stake 的 `claim`、拍卖结束由用户调 `endAuction`、Pledge 的 `withdrawLend`，都是 pull。无界循环在链上会把合约卡死。",
+   "level": 2,
+   "tags": [],
+   "cat": "pattern",
+   "catName": "捐赠合约、提款方式与工具链",
+   "id": "p76"
+  },
+  {
+   "no": 77,
+   "q": "Hardhat 和 Foundry 你作业里都用过，面试怎么说？",
+   "a": "Hardhat 偏 JS/TS 脚本和插件，拍卖作业用 Hardhat 3 + Mocha。Foundry 用 Solidity 写测试，带 fuzz、cheatcode，Stake 作业要求从 Hardhat 迁到 Foundry，覆盖率做到 80% 以上。编译、测试、部署两套都能做；迁的时候改的是测试语言、脚本和依赖，不是业务状态机。",
+   "level": 2,
+   "tags": [],
+   "cat": "pattern",
+   "catName": "捐赠合约、提款方式与工具链",
+   "id": "p77"
+  },
+  {
+   "no": 78,
+   "q": "EIP 和 ERC 差在哪？",
+   "a": "EIP 是以太坊改进提案的总称。ERC 是其中偏应用层的接口标准，例如代币。编号是文档号，不代表某个项目已经实现。读的时候看官方页是 Draft 还是 Final。",
+   "level": 2,
+   "tags": [],
+   "cat": "eip",
+   "catName": "常用 ERC / EIP",
+   "id": "p78"
+  },
+  {
+   "no": 79,
+   "q": "ERC-2612 的 `permit` 解决什么？签完等于转账了吗？",
+   "a": "用户离线签一条授权，任意账户提交 `permit`，链上更新 `allowance`，少发一笔 `approve`。用 EIP-712，带 nonce 和 deadline。签完只是授权，后面仍要 `transferFrom`。不是所有 ERC20 都有 `permit`。",
+   "level": 2,
+   "tags": [],
+   "cat": "eip",
+   "catName": "常用 ERC / EIP",
+   "id": "p79"
+  },
+  {
+   "no": 80,
+   "q": "ERC-1155 和 721 差在哪？ERC-165、ERC-2981 各干什么？",
+   "a": "1155 一个合约里既能发同质又能发非同质，支持批量转。转入合约要走 `onERC1155Received`。165 是 `supportsInterface(bytes4)`，声明自己实现了哪些接口，不是安全证明。2981 是 `royaltyInfo(tokenId, salePrice)`，市场按自己的规则付钱，标准本身不转账。",
+   "level": 2,
+   "tags": [],
+   "cat": "eip",
+   "catName": "常用 ERC / EIP",
+   "id": "p80"
+  },
+  {
+   "no": 81,
+   "q": "合约钱包的签名怎么验？和 EOA 的 `ecrecover` 怎么拼？",
+   "a": "EOA 用 `ecrecover`。合约钱包走 ERC-1271：`isValidSignature` 返回 magic `0x1626ba7e` 才算通过。永续订单的 signer 可以是合约，作业文档里写过 EIP-1271。调用方通常 `staticcall` 去问，不要假设所有地址都能 `ecrecover`。",
+   "level": 2,
+   "tags": [],
+   "cat": "eip",
+   "catName": "常用 ERC / EIP",
+   "id": "p81"
+  },
+  {
+   "no": 82,
+   "q": "ERC-4626 金库的份额和资产怎么换？",
+   "a": "单一 ERC20 资产的存款凭证。`deposit` / `mint` 进，`withdraw` / `redeem` 出。`convertToShares` / `convertToAssets` 看兑换关系。先 `approve` 金库再 deposit。借贷协议用它把「存 USDC 拿利息凭证」标准化。",
+   "level": 2,
+   "tags": [],
+   "cat": "eip",
+   "catName": "常用 ERC / EIP",
+   "id": "p82"
+  },
+  {
+   "no": 83,
+   "q": "ERC-4337 用户还要自己持有 ETH 付 gas 吗？",
+   "a": "不一定。用户签的是 `UserOperation`，交给 Bundler，Bundler 调 EntryPoint 的 `handleOps`。Paymaster 可以代付 gas。账户要能 `validateUserOp`。这是应用层账户抽象，不改共识。EIP-7702 是另一条：让 EOA 在一笔 set-code 交易里临时委托一段代码，体验接近智能账户，但仍是那个 EOA。",
+   "level": 2,
+   "tags": [],
+   "cat": "eip",
+   "catName": "常用 ERC / EIP",
+   "id": "p83"
+  },
+  {
+   "no": 84,
+   "q": "作业里的 ERC-8004、x402 面试时说到什么深度？",
+   "a": "8004 还是草案：给 Agent 做身份、声誉、验证注册表。x402 不是 ERC，是 HTTP 402 的支付协议，客户端带支付证明再请求资源。点到「AI 代理要身份和付款，链上标准和 Web 支付协议是两条线」即可，不要背成已落地的主网接口。",
+   "level": 2,
+   "tags": [],
+   "cat": "eip",
+   "catName": "常用 ERC / EIP",
+   "id": "p84"
+  },
+  {
+   "no": 85,
+   "q": "合并之后 Geth 还负责出块权吗？一台主网节点要跑几个客户端？",
+   "a": "Geth 是执行客户端：存状态、执行交易、P2P 传区块。出块权和最终确认在共识客户端（Lighthouse、Prysm），通过 Engine API（`engine_forkchoiceUpdated`、`engine_getPayload`）把 payload 交给 Geth。主网节点通常两个客户端一起跑。`geth --dev` 用模拟信标在本机出块，和主网 PoS 不是同一条路径。源码里的 Ethash 只用来校验合并前的块。",
+   "level": 2,
+   "tags": [],
+   "cat": "geth",
+   "catName": "Go-Ethereum",
+   "id": "p85"
+  },
+  {
+   "no": 86,
+   "q": "作业里的四层怎么走？`les` 还在吗？",
+   "a": "P2P（发现 + RLPx）→ 协议层（`eth` / `snap` 传区块和交易）→ 状态层（Merkle Patricia Trie）→ EVM。`les` 轻节点协议在 v1.17.10 里已经去掉，全节点同步改走 `snap`。发现用 Kademlia 风格的 discv4/discv5，传链数据的是 `eth` 协议，不是发现协议本身。作业题里的 `eth/62` 是旧版本号，当前常见是 `eth/72` 这类。",
+   "level": 2,
+   "tags": [],
+   "cat": "geth",
+   "catName": "Go-Ethereum",
+   "id": "p86"
+  },
+  {
+   "no": 87,
+   "q": "交易进 Geth 交易池要过哪些关？base fee 给矿工吗？",
+   "a": "nonce 连续、余额盖得住 `value + gas × 费用上限`、gas 不低于固有 gas，1559 还要求 `maxFeePerGas` ≥ 当前 base fee。base fee 烧掉，优先费给出块者。EVM 按操作码扣 gas，失败回滚状态，已耗 gas 仍要付。池内按价格和 nonce 排，出块时在 gas 上限里挑。",
+   "level": 2,
+   "tags": [],
+   "cat": "geth",
+   "catName": "Go-Ethereum",
+   "id": "p87"
+  },
+  {
+   "no": 88,
+   "q": "状态根是怎么承诺整棵状态的？改一个账户为什么只动一条路径？",
+   "a": "账户在状态 Trie 上，合约存储另有一棵 storage Trie，根写在账户里。节点 RLP 后再 Keccak，哈希进父节点。改一个叶子只改从叶子到根的路径，区块头里 32 字节 `stateRoot` 就能承诺当前全部账户。作业查区块时看到的哈希、交易数，头里还有这颗根。",
+   "level": 2,
+   "tags": [],
+   "cat": "geth",
+   "catName": "Go-Ethereum",
+   "id": "p88"
+  },
+  {
+   "no": 89,
+   "q": "`abigen` 生成的文件能手改吗？Go 里发交易，私钥放哪？",
+   "a": "不能手改。Solidity 编译出 ABI 和 bytecode，`abigen` 生成 Go 绑定，合约改了就重新生成。作业的 Counter 先 deploy 再 `increment`。私钥只放环境变量，程序要核 chain ID（Sepolia 11155111），余额不够就不要发。这把钥匙在主网上同样能转走资产，用空测试账户。",
+   "level": 2,
+   "tags": [],
+   "cat": "geth",
+   "catName": "Go-Ethereum",
+   "id": "p89"
+  },
+  {
+   "no": 90,
+   "q": "JSON-RPC 查区块和发交易，分别打哪些方法？",
+   "a": "查：`eth_getBlockByNumber` / `eth_getBlockByHash`，作业打印哈希、时间戳、交易数。发：本地用私钥签好，再 `eth_sendRawTransaction`。读合约用 `eth_call`，不耗 gas；写合约要签名广播，等 receipt 的 `status` 和日志。Infura 这类是远程节点，不是你在跑 Geth，但 RPC 形状一样。",
+   "level": 2,
+   "tags": [],
+   "cat": "geth",
+   "catName": "Go-Ethereum",
+   "id": "p90"
   }
  ]
-}
+};

@@ -7,13 +7,15 @@ const feedback = require('../../utils/feedback.js');
 const NO = {};
 questions.forEach((q, i) => { NO[q.id] = i + 1; });
 
-const CAT_CHIPS = [{ id: 'all', name: '全部', count: questions.length }]
-  .concat(categories.map(c => ({ id: c.id, name: c.name, count: c.count })));
+const CAT_NAME = {};
+categories.forEach(c => { CAT_NAME[c.id] = c.name; });
 
 Page({
   data: {
-    cats: CAT_CHIPS,
-    activeCat: 'all',
+    activeCat: 'all',  // 当前题型：'all' = 全部
+    catLabel: '全部题型',
+    catPicker: false,  // 题型选择弹层
+    tmpCats: [],       // 弹层列表（on = 当前选中项）
     list: [],      // 当前筛选下的题目序列
     curIdx: 0,     // 当前显示第几题
     cur: null,     // 当前题（渲染用）
@@ -31,21 +33,24 @@ Page({
     this.refresh(true);
   },
 
+  // 当前筛选下的题目池（单选分类，'all' = 全部）
+  pool() {
+    const { activeCat } = this.data;
+    return questions.filter(q => activeCat === 'all' || q.cat === activeCat);
+  },
+
   buildList() {
     const map = store.getProgress();
-    const { activeCat } = this.data;
-    return questions
-      .filter(q => activeCat === 'all' || q.cat === activeCat)
-      .map(q => ({
-        id: q.id,
-        no: NO[q.id],
-        q: q.q,
-        a: mdLite(q.a),
-        levelName: store.LEVELS[q.level],
-        catName: q.catName,
-        color: store.CAT_COLORS[q.cat] || '#57606a',
-        state: store.stateOf(map, q.id),
-      }));
+    return this.pool().map(q => ({
+      id: q.id,
+      no: NO[q.id],
+      q: q.q,
+      a: mdLite(q.a),
+      levelName: store.LEVELS[q.level],
+      catName: q.catName,
+      color: store.CAT_COLORS[q.cat] || '#57606a',
+      state: store.stateOf(map, q.id),
+    }));
   },
 
   refresh(keepIdx = false) {
@@ -60,7 +65,8 @@ Page({
       list,
       curIdx: idx,
       cur: list[idx] || null,
-      stats: store.statsOf(questions, store.getProgress()),
+      // 顶部统计跟随筛选范围：选了哪个题型就统计哪个分类的题
+      stats: store.statsOf(this.pool(), store.getProgress()),
     });
   },
 
@@ -78,9 +84,33 @@ Page({
     this._animTimer = setTimeout(() => this.setData({ anim: '' }), 260);
   },
 
-  onCat(e) {
+  // ===== 题型单选弹层 =====
+  openCats() {
     feedback.tap();
-    this.setData({ activeCat: e.currentTarget.dataset.id });
+    const { activeCat } = this.data;
+    const tmpCats = categories.map(c => ({
+      id: c.id, name: c.name, count: c.count,
+      color: store.CAT_COLORS[c.id] || '#57606a',
+      on: c.id === activeCat,
+    }));
+    this.setData({ catPicker: true, tmpCats });
+  },
+
+  closeCats() {
+    this.setData({ catPicker: false });
+  },
+
+  noop() {},
+
+  // 单选：点击即选中并关闭
+  chooseCat(e) {
+    feedback.tap();
+    const id = e.currentTarget.dataset.id;
+    this.setData({
+      catPicker: false,
+      activeCat: id,
+      catLabel: id === 'all' ? '全部题型' : CAT_NAME[id],
+    });
     this.refresh();
   },
 
@@ -90,17 +120,20 @@ Page({
   },
 
   onMark(e) {
-    feedback.tap();
     const { id, st } = e.currentTarget.dataset;
+    const before = store.getProgress()[id] || '';
+    // 标记掌握给个喜庆音效（震动保留）；已是已掌握再点则不重播
+    if (st === 'known' && before !== 'known') feedback.cheer();
+    feedback.tap();
     store.setState(id, st === 'none' ? '' : st);
-    // 更新当前题状态 + 顶部总进度统计
+    // 更新当前题状态 + 顶部总进度统计（跟随筛选范围）
     const map = store.getProgress();
     const list = this.buildList();
     const idx = this.data.curIdx;
     this.setData({
       cur: list[idx],
       list,
-      stats: store.statsOf(questions, map),
+      stats: store.statsOf(this.pool(), map),
     });
   },
 

@@ -175,3 +175,8 @@ page {
   border-radius: 999rpx;
   background: linear-gradient(90deg, #2c4d79, #5e8ab4);
 }
+
+/* 导航栏藏青主题：返回箭头随 color 属性变白（组件 apply-shared 可被页面样式覆盖） */
+.weui-navigation-bar__btn_goback {
+  background-color: currentColor;
+}
